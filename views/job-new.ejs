@@ -1,0 +1,33 @@
+<% pageTitle = 'Post a Job' %>
+<%- include('partials/header') %>
+
+<div class="container">
+    <div class="section-title">Post a Job</div>
+    <form action="/jobs/new" method="POST">
+        <label>Job Title</label>
+        <input type="text" name="title" placeholder="e.g. Design a logo for my shop" required>
+
+        <label>Description</label>
+        <textarea name="description" rows="5" required></textarea>
+
+        <label>Category</label>
+        <select name="category_id" required>
+            <% categories.forEach(cat => { %>
+                <option value="<%= cat.id %>"><%= cat.name %></option>
+            <% }) %>
+        </select>
+
+        <label>Budget (MWK)</label>
+        <input type="number" name="budget_mwk" min="0" required>
+
+        <label>City</label>
+        <input type="text" name="city" placeholder="e.g. Blantyre" required>
+
+        <label>Deadline (optional)</label>
+        <input type="date" name="deadline">
+
+        <button type="submit" class="btn btn-primary">Post Job</button>
+    </form>
+</div>
+
+<%- include('partials/footer') %>
