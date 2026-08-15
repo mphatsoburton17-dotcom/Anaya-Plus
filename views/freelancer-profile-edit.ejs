@@ -1,0 +1,20 @@
+<% pageTitle = 'Edit Profile' %>
+<%- include('partials/header') %>
+
+<div class="container">
+    <div class="section-title">Complete Your Freelancer Profile</div>
+    <form action="/freelancer/profile/edit" method="POST">
+        <label>Bio</label>
+        <textarea name="bio" rows="4" placeholder="Tell clients about your experience..."><%= profile.bio || '' %></textarea>
+
+        <label>Skills (comma-separated)</label>
+        <input type="text" name="skills" placeholder="e.g. Logo Design, Branding, Illustration" value="<%= profile.skills || '' %>">
+
+        <label>Hourly/Project Rate (MWK)</label>
+        <input type="number" name="hourly_rate" value="<%= profile.hourly_rate || '' %>">
+
+        <button type="submit" class="btn btn-primary">Save Profile</button>
+    </form>
+</div>
+
+<%- include('partials/footer') %>
