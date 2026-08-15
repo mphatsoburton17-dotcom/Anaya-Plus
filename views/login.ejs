@@ -1,0 +1,19 @@
+<% pageTitle = 'Log In' %>
+<%- include('partials/header') %>
+
+<div class="container">
+    <div class="section-title">Log in</div>
+    <% if (error) { %><p class="error"><%= error %></p><% } %>
+    <form action="/login" method="POST">
+        <label>Email</label>
+        <input type="email" name="email" required>
+
+        <label>Password</label>
+        <input type="password" name="password" required>
+
+        <button type="submit" class="btn btn-primary">Log In</button>
+    </form>
+    <p style="margin-top:16px;">Don't have an account? <a href="/signup" style="color:var(--orange); font-weight:600;">Sign up</a></p>
+</div>
+
+<%- include('partials/footer') %>
