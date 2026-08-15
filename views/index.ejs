@@ -1,0 +1,32 @@
+<% pageTitle = 'Home' %>
+<%- include('partials/header') %>
+
+<div class="hero">
+    <h1>Find local talent. Get things done.</h1>
+    <p>AnayaPlus connects Malawian businesses with trusted local freelancers — safely, with payments held until the job is done.</p>
+    <a href="/jobs" class="btn" style="background:white; color:var(--orange);">Browse Jobs</a>
+    <a href="/signup" class="btn" style="background:rgba(255,255,255,0.2); color:white; border:1.5px solid white;">Get Started</a>
+</div>
+
+<div class="container">
+    <div class="section-title">Categories</div>
+    <div class="category-grid">
+        <% categories.forEach(cat => { %>
+            <a href="/jobs?category=<%= cat.id %>" class="category-pill"><%= cat.name %></a>
+        <% }) %>
+    </div>
+
+    <div class="section-title">Recent Jobs</div>
+    <% if (recentJobs.length === 0) { %>
+        <p>No open jobs yet — be the first to post one.</p>
+    <% } %>
+    <% recentJobs.forEach(job => { %>
+        <a href="/jobs/<%= job.id %>" class="card" style="display:block;">
+            <span class="badge"><%= job.category_name %></span>
+            <h3 style="margin:8px 0 4px;"><%= job.title %></h3>
+            <p style="color:var(--gray); margin:0;"><%= job.city %> · MWK <%= job.budget_mwk.toLocaleString() %></p>
+        </a>
+    <% }) %>
+</div>
+
+<%- include('partials/footer') %>
