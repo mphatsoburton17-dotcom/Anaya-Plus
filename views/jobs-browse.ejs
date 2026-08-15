@@ -1,0 +1,31 @@
+<% pageTitle = 'Browse Jobs' %>
+<%- include('partials/header') %>
+
+<div class="container">
+    <div class="section-title">Browse Jobs</div>
+
+    <form method="GET" action="/jobs" style="flex-direction:row; flex-wrap:wrap; max-width:none; margin-bottom:24px;">
+        <select name="category">
+            <option value="">All Categories</option>
+            <% categories.forEach(cat => { %>
+                <option value="<%= cat.id %>" <%= filters.category == cat.id ? 'selected' : '' %>><%= cat.name %></option>
+            <% }) %>
+        </select>
+        <input type="text" name="city" placeholder="City" value="<%= filters.city || '' %>" style="width:160px;">
+        <button type="submit" class="btn btn-primary" style="width:auto;">Filter</button>
+    </form>
+
+    <% if (jobs.length === 0) { %>
+        <p>No jobs match your filters right now.</p>
+    <% } %>
+    <% jobs.forEach(job => { %>
+        <a href="/jobs/<%= job.id %>" class="card" style="display:block;">
+            <span class="badge"><%= job.category_name %></span>
+            <h3 style="margin:8px 0 4px;"><%= job.title %></h3>
+            <p style="color:var(--gray); margin:0 0 8px;"><%= job.city %> · MWK <%= job.budget_mwk.toLocaleString() %></p>
+            <p style="margin:0;"><%= job.description.slice(0, 120) %>...</p>
+        </a>
+    <% }) %>
+</div>
+
+<%- include('partials/footer') %>
