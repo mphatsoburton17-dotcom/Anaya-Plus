@@ -1,0 +1,42 @@
+<% pageTitle = job.title %>
+<%- include('partials/header') %>
+
+<div class="container">
+    <span class="badge"><%= job.category_name %></span>
+    <h1 style="margin:8px 0 4px;"><%= job.title %></h1>
+    <p style="color:var(--gray);"><%= job.city %> · MWK <%= job.budget_mwk.toLocaleString() %> · Posted by <%= job.client_name %></p>
+    <p><%= job.description %></p>
+    <p><strong>Status:</strong> <%= job.status %></p>
+
+    <% if (currentUser && currentUser.role === 'freelancer' && job.status === 'open') { %>
+        <div class="card">
+            <div class="section-title" style="font-size:18px;">Apply to this job</div>
+            <form action="/jobs/<%= job.id %>/apply" method="POST">
+                <label>Your Proposal</label>
+                <textarea name="proposal" rows="4" required></textarea>
+                <label>Your Price (MWK)</label>
+                <input type="number" name="proposed_price" min="0" required>
+                <button type="submit" class="btn btn-primary">Submit Application</button>
+            </form>
+        </div>
+    <% } %>
+
+    <% if (currentUser && currentUser.role === 'client' && job.client_id === currentUser.id) { %>
+        <div class="section-title">Applications (<%= applications.length %>)</div>
+        <% applications.forEach(app => { %>
+            <div class="card">
+                <strong><%= app.full_name %></strong>
+                <span class="badge"><%= app.status %></span>
+                <p><%= app.proposal %></p>
+                <p><strong>Proposed price:</strong> MWK <%= app.proposed_price.toLocaleString() %></p>
+                <% if (app.status === 'pending' && job.status === 'open') { %>
+                    <form action="/applications/<%= app.id %>/accept" method="POST">
+                        <button type="submit" class="btn btn-primary" style="width:auto;">Accept & Pay Into Escrow</button>
+                    </form>
+                <% } %>
+            </div>
+        <% }) %>
+    <% } %>
+</div>
+
+<%- include('partials/footer') %>
