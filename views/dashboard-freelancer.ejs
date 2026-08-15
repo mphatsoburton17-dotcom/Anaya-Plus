@@ -1,0 +1,24 @@
+<% pageTitle = 'My Applications' %>
+<%- include('partials/header') %>
+
+<div class="container">
+    <div class="section-title">My Applications</div>
+    <a href="/jobs" class="btn btn-primary" style="width:auto; display:inline-block; margin-bottom:20px;">Browse More Jobs</a>
+
+    <% if (applications.length === 0) { %>
+        <p>You haven't applied to any jobs yet.</p>
+    <% } %>
+    <% applications.forEach(app => { %>
+        <div class="card">
+            <h3 style="margin:0 0 4px;"><%= app.title %></h3>
+            <span class="badge"><%= app.status %></span>
+            <span class="badge" style="background:#E3F2FD; color:#1565C0;">Job: <%= app.job_status %></span>
+            <p style="color:var(--gray);">Your bid: MWK <%= app.proposed_price.toLocaleString() %></p>
+            <% if (app.was_free_application) { %>
+                <p style="font-size:13px; color:var(--gray);">✓ Used your free application</p>
+            <% } %>
+        </div>
+    <% }) %>
+</div>
+
+<%- include('partials/footer') %>
