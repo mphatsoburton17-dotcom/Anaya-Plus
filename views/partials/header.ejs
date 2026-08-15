@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle + ' — ' + brand.name : brand.name %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="brand">
+            <span class="mark"></span>
+            <span>Anaya<span class="plus">Plus</span></span>
+        </a>
+        <div class="nav-links">
+            <a href="/jobs">Browse Jobs</a>
+            <% if (currentUser) { %>
+                <% if (currentUser.role === 'client') { %>
+                    <a href="/jobs/new" class="btn btn-secondary">Post a Job</a>
+                <% } %>
+                <a href="/dashboard">Dashboard</a>
+                <form action="/logout" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-secondary">Logout</button>
+                </form>
+            <% } else { %>
+                <a href="/login">Log In</a>
+                <a href="/signup" class="btn btn-primary">Sign Up</a>
+            <% } %>
+        </div>
+    </nav>
