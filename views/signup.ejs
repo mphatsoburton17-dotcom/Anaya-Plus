@@ -1,0 +1,34 @@
+<% pageTitle = 'Sign Up' %>
+<%- include('partials/header') %>
+
+<div class="container">
+    <div class="section-title">Create your account</div>
+    <% if (error) { %><p class="error"><%= error %></p><% } %>
+    <form action="/signup" method="POST">
+        <label>Full Name</label>
+        <input type="text" name="full_name" required>
+
+        <label>Email</label>
+        <input type="email" name="email" required>
+
+        <label>Phone Number</label>
+        <input type="tel" name="phone" placeholder="e.g. 0991234567" required>
+
+        <label>City</label>
+        <input type="text" name="city" placeholder="e.g. Lilongwe" required>
+
+        <label>Password</label>
+        <input type="password" name="password" required>
+
+        <label>I am a...</label>
+        <select name="role" required>
+            <option value="client">Client — looking to hire</option>
+            <option value="freelancer">Freelancer — looking for work</option>
+        </select>
+
+        <button type="submit" class="btn btn-primary">Sign Up</button>
+    </form>
+    <p style="margin-top:16px;">Already have an account? <a href="/login" style="color:var(--orange); font-weight:600;">Log in</a></p>
+</div>
+
+<%- include('partials/footer') %>
