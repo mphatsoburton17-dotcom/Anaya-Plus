@@ -1,5 +1,37 @@
-<footer>
+<% if (currentUser) { %>
+    <nav class="bottom-nav">
+        <a href="/jobs" class="bottom-nav-item">
+            <span class="bottom-nav-icon">🔍</span>
+            <span>Jobs</span>
+        </a>
+        <a href="/dashboard" class="bottom-nav-item">
+            <span class="bottom-nav-icon">📝</span>
+            <span><%= currentUser.role === 'client' ? 'My Jobs' : 'Applications' %></span>
+        </a>
+        <a href="/contracts" class="bottom-nav-item">
+            <span class="bottom-nav-icon">📄</span>
+            <span>Contracts</span>
+        </a>
+        <a href="/messages" class="bottom-nav-item">
+            <span class="bottom-nav-icon">💬</span>
+            <span>Messages</span>
+        </a>
+        <a href="/alerts" class="bottom-nav-item">
+            <span class="bottom-nav-icon">🔔</span>
+            <span>Alerts</span>
+        </a>
+    </nav>
+    <% } %>
+
+    <footer>
         &copy; <%= new Date().getFullYear() %> AnayaPlus — a branch of Anaya Store. Local services, made simple.
     </footer>
+
+    <script>
+        function toggleAccountMenu() {
+            document.getElementById('accountMenu').classList.toggle('open');
+            document.getElementById('accountOverlay').classList.toggle('open');
+        }
+    </script>
 </body>
 </html>
