@@ -1,4 +1,4 @@
--- AnayaPlus Database Schema
+  -- AnayaPlus Database Schema
 -- SQLite (portable, easy to swap for PostgreSQL/MySQL later)
 
 PRAGMA foreign_keys = ON;
@@ -119,4 +119,17 @@ CREATE TABLE IF NOT EXISTS disputes (
         CHECK (status IN ('open', 'under_review', 'resolved', 'escalated_legal')),
     resolution_notes TEXT,
     created_at TEXT DEFAULT (datetime('now')),
-    resol
+    resolved_at TEXT,
+    FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+    FOREIGN KEY (raised_by) REFERENCES users(id)
+);
+
+INSERT OR IGNORE INTO categories (name) VALUES
+    ('Graphic Design'),
+    ('Web & Software Development'),
+    ('Social Media Management'),
+    ('Photography'),
+    ('Tutoring'),
+    ('Home Repair & Artisan Work'),
+    ('Writing & Translation'),
+    ('Event Planning');  
