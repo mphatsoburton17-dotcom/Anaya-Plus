@@ -19,12 +19,35 @@
                     <a href="/jobs/new" class="btn btn-secondary">Post a Job</a>
                 <% } %>
                 <a href="/dashboard">Dashboard</a>
-                <form action="/logout" method="POST" style="display:inline;">
-                    <button type="submit" class="btn btn-secondary">Logout</button>
-                </form>
+                <button onclick="toggleAccountMenu()" class="avatar-btn" aria-label="Account menu">
+                    <%= currentUser.full_name ? currentUser.full_name.charAt(0).toUpperCase() : 'A' %>
+                </button>
             <% } else { %>
                 <a href="/login">Log In</a>
                 <a href="/signup" class="btn btn-primary">Sign Up</a>
             <% } %>
         </div>
     </nav>
+
+    <% if (currentUser) { %>
+    <div id="accountOverlay" class="account-overlay" onclick="toggleAccountMenu()"></div>
+    <div id="accountMenu" class="account-menu">
+        <div class="account-menu-header">
+            <div class="account-avatar"><%= currentUser.full_name ? currentUser.full_name.charAt(0).toUpperCase() : 'A' %></div>
+            <div>
+                <div style="font-weight:700;"><%= currentUser.full_name %></div>
+                <div style="color:var(--gray); font-size:13px; text-transform:capitalize;"><%= currentUser.role %></div>
+            </div>
+        </div>
+        <a href="/profile" class="account-menu-item">Profile</a>
+        <a href="/dashboard" class="account-menu-item">My Stats</a>
+        <% if (currentUser.role === 'client') { %>
+            <a href="/jobs/new" class="account-menu-item">Post a Job</a>
+        <% } %>
+        <a href="/settings" class="account-menu-item">Settings</a>
+        <a href="/help" class="account-menu-item">Help & Support</a>
+        <form action="/logout" method="POST">
+            <button type="submit" class="account-menu-item account-menu-logout">Log Out</button>
+        </form>
+    </div>
+    <% } %>
