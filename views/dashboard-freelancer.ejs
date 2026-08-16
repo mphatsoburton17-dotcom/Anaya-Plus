@@ -1,21 +1,35 @@
 <% pageTitle = 'My Applications' %>
 <%- include('partials/header') %>
 
-<div class="container">
+<div class="container" style="max-width:600px;">
     <div class="section-title">My Applications</div>
-    <a href="/jobs" class="btn btn-primary" style="width:auto; display:inline-block; margin-bottom:20px;">Browse More Jobs</a>
+
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+        <input type="text" placeholder="Search your applications" style="flex:1;">
+        <a href="/jobs" class="btn btn-primary" style="width:auto; white-space:nowrap;">Browse Jobs</a>
+    </div>
+
+    <div style="display:flex; gap:20px; border-bottom:1px solid #eee; margin-bottom:20px;">
+        <span style="font-weight:700; padding-bottom:8px; border-bottom:2px solid var(--orange);">All</span>
+        <span style="color:var(--gray); padding-bottom:8px;">Pending</span>
+        <span style="color:var(--gray); padding-bottom:8px;">Active</span>
+    </div>
 
     <% if (applications.length === 0) { %>
-        <p>You haven't applied to any jobs yet.</p>
+        <p style="color:var(--gray);">You haven't applied to any jobs yet.</p>
+        <a href="/jobs" class="btn btn-primary" style="width:auto;">Find your first job</a>
     <% } %>
+
     <% applications.forEach(app => { %>
-        <div class="card">
-            <h3 style="margin:0 0 4px;"><%= app.title %></h3>
-            <span class="badge"><%= app.status %></span>
-            <span class="badge" style="background:#E3F2FD; color:#1565C0;">Job: <%= app.job_status %></span>
-            <p style="color:var(--gray);">Your bid: MWK <%= app.proposed_price.toLocaleString() %></p>
+        <div class="card" style="border:1px solid #eee; border-radius:10px; padding:16px; margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <h3 style="margin:0; font-size:17px;"><%= app.title %></h3>
+                <span class="badge" style="background:#FFF3E0; color:var(--orange); font-size:12px; padding:4px 10px; border-radius:20px;"><%= app.status %></span>
+            </div>
+            <p style="color:var(--gray); font-size:13px; margin:6px 0;">Job status: <%= app.job_status %></p>
+            <p style="font-weight:600; margin:6px 0;">Your bid: MWK <%= app.proposed_price.toLocaleString() %></p>
             <% if (app.was_free_application) { %>
-                <p style="font-size:13px; color:var(--gray);">✓ Used your free application</p>
+                <p style="font-size:12px; color:var(--gray);">✓ Used your free application</p>
             <% } %>
         </div>
     <% }) %>
