@@ -1,0 +1,13 @@
+<% pageTitle = 'Verify Your ID' %>
+<%- include('partials/header') %>
+<%- include('partials/onboarding-progress') %>
+<div class="container">
+    <div class="section-title">Verify your ID</div>
+    <p style="color:var(--gray); font-size:14px; margin-bottom:16px;">Upload a clear photo of your national ID, passport, or driver's license. This keeps AnayaPlus safe for everyone.</p>
+    <form action="/freelancer/onboarding/id" method="POST" enctype="multipart/form-data">
+        <label>ID Document Photo</label>
+        <input type="file" name="id_document" accept="image/*" required>
+        <button type="submit" class="btn btn-primary" style="margin-top:20px;">Continue</button>
+    </form>
+</div>
+<%- include('partials/footer') %>
