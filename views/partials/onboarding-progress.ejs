@@ -1,0 +1,8 @@
+<div style="max-width:480px; margin:24px auto 0; padding:0 20px;">
+    <div style="display:flex; gap:4px; margin-bottom:8px;">
+        <% for (let i = 0; i < totalSteps; i++) { %>
+            <div style="flex:1; height:4px; border-radius:2px; background:<%= i <= stepIndex ? 'var(--orange)' : '#eee' %>;"></div>
+        <% } %>
+    </div>
+    <p style="color:var(--gray); font-size:13px; margin:0 0 16px;">Step <%= stepIndex + 1 %> of <%= totalSteps %></p>
+</div>
