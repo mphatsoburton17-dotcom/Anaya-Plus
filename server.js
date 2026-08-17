@@ -80,6 +80,10 @@ function requireOnboarding(req, res, next) {
     if (!profile || !profile.onboarding_complete) {
         return res.redirect('/freelancer/onboarding/id');
     }
+    const status = db.prepare('SELECT is_verified FROM users WHERE id = ?').get(req.session.user.id);
+    if (!status || !status.is_verified) {
+        return res.redirect('/freelancer/onboarding/pending');
+    }
     next();
 }
 
@@ -87,13 +91,7 @@ function requireOnboarding(req, res, next) {
 
 app.get('/', (req, res) => {
     const categories = db.prepare('SELECT * FROM categories ORDER BY name').all();
-    const recentJobs = db.prepare(`
-        SELECT jobs.*, categories.name AS category_name
-        FROM jobs JOIN categories ON jobs.category_id = categories.id
-        WHERE jobs.status = 'open'
-        ORDER BY jobs.created_at DESC LIMIT 6
-    `).all();
-    res.render('index', { categories, recentJobs });
+    res.render('index', { categories });
 });
 
 app.get('/signup', (req, res) => res.render('signup', { error: null }));
