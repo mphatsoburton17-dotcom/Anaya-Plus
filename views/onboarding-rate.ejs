@@ -1,0 +1,12 @@
+<% pageTitle = 'Your Rate' %>
+<%- include('partials/header') %>
+<%- include('partials/onboarding-progress') %>
+<div class="container">
+    <div class="section-title">What's your hourly rate?</div>
+    <form action="/freelancer/onboarding/rate" method="POST">
+        <label>Hourly Rate (MWK)</label>
+        <input type="number" name="hourly_rate" min="0" step="1" required>
+        <button type="submit" class="btn btn-primary" style="margin-top:20px;">Finish</button>
+    </form>
+</div>
+<%- include('partials/footer') %>
