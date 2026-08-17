@@ -1,0 +1,16 @@
+<% pageTitle = 'Certificates' %>
+<%- include('partials/header') %>
+<%- include('partials/onboarding-progress') %>
+<div class="container">
+    <div class="section-title">Certificates (optional)</div>
+    <p style="color:var(--gray); font-size:14px; margin-bottom:16px;">Have any certifications? Upload them — or skip this step.</p>
+    <form action="/freelancer/onboarding/certificates" method="POST" enctype="multipart/form-data">
+        <label>Certificate File</label>
+        <input type="file" name="certificates" accept="image/*,application/pdf">
+        <button type="submit" class="btn btn-primary" style="margin-top:20px;">Continue</button>
+    </form>
+    <form action="/freelancer/onboarding/certificates" method="POST" style="margin-top:10px;">
+        <button type="submit" class="btn" style="background:none; color:var(--gray); text-decoration:underline;">Skip this step</button>
+    </form>
+</div>
+<%- include('partials/footer') %>
