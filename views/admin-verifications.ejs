@@ -1,0 +1,21 @@
+<% pageTitle = 'Pending Verifications' %>
+<%- include('partials/header') %>
+<div class="container">
+    <div class="section-title">Pending Freelancer Verifications</div>
+    <% if (pending.length === 0) { %>
+        <p style="color:var(--gray);">No pending verifications.</p>
+    <% } %>
+    <% pending.forEach(u => { %>
+        <div class="card" style="border:1px solid #eee; border-radius:10px; padding:16px; margin-bottom:14px;">
+            <h3 style="margin:0 0 6px;"><%= u.full_name %></h3>
+            <p style="color:var(--gray); font-size:14px; margin:0 0 10px;"><%= u.email %> · <%= u.phone %> · <%= u.city %></p>
+            <% if (u.id_document_path) { %>
+                <a href="<%= u.id_document_path %>" target="_blank" style="color:var(--orange); font-weight:600;">View ID Document</a>
+            <% } %>
+            <form action="/admin/verifications/<%= u.id %>/approve" method="POST" style="margin-top:12px;">
+                <button type="submit" class="btn btn-primary" style="width:auto;">Approve</button>
+            </form>
+        </div>
+    <% }) %>
+</div>
+<%- include('partials/footer') %>
