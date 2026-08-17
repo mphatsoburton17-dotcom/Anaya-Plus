@@ -1,0 +1,12 @@
+<% pageTitle = 'Upload Your CV' %>
+<%- include('partials/header') %>
+<%- include('partials/onboarding-progress') %>
+<div class="container">
+    <div class="section-title">Upload your CV</div>
+    <form action="/freelancer/onboarding/cv" method="POST" enctype="multipart/form-data">
+        <label>CV / Resume (PDF or image)</label>
+        <input type="file" name="cv" accept="image/*,application/pdf" required>
+        <button type="submit" class="btn btn-primary" style="margin-top:20px;">Continue</button>
+    </form>
+</div>
+<%- include('partials/footer') %>
