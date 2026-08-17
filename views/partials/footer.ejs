@@ -1,4 +1,4 @@
-<% if (currentUser) { %>
+<% if (currentUser && !(currentUser.role === 'freelancer' && !currentUser.is_verified)) { %>
     <nav class="bottom-nav">
         <a href="/jobs" class="bottom-nav-item">
             <span class="bottom-nav-icon">🔍</span>
@@ -24,7 +24,7 @@
     <% } %>
 
     <footer>
-        &copy; <%= new Date().getFullYear() %> AnayaPlus — a branch of Anaya Store. Local services, made simple.
+        &copy; <%= new Date().getFullYear() %> AnayaPlus. Local services, made simple.
     </footer>
 
     <script>
