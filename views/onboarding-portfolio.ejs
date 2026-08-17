@@ -1,0 +1,16 @@
+<% pageTitle = 'Your Portfolio' %>
+<%- include('partials/header') %>
+<%- include('partials/onboarding-progress') %>
+<div class="container">
+    <div class="section-title">Show your work (optional)</div>
+    <p style="color:var(--gray); font-size:14px; margin-bottom:16px;">Upload up to 5 photos of past work — this helps clients trust you.</p>
+    <form action="/freelancer/onboarding/portfolio" method="POST" enctype="multipart/form-data">
+        <label>Portfolio Images</label>
+        <input type="file" name="portfolio" accept="image/*" multiple>
+        <button type="submit" class="btn btn-primary" style="margin-top:20px;">Continue</button>
+    </form>
+    <form action="/freelancer/onboarding/portfolio" method="POST" style="margin-top:10px;">
+        <button type="submit" class="btn" style="background:none; color:var(--gray); text-decoration:underline;">Skip this step</button>
+    </form>
+</div>
+<%- include('partials/footer') %>
