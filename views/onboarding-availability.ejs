@@ -1,0 +1,15 @@
+<% pageTitle = 'Availability' %>
+<%- include('partials/header') %>
+<%- include('partials/onboarding-progress') %>
+<div class="container">
+    <div class="section-title">Full-time or part-time?</div>
+    <form action="/freelancer/onboarding/availability" method="POST">
+        <label>Availability</label>
+        <select name="availability" required>
+            <option value="full_time">Full-time</option>
+            <option value="part_time">Part-time</option>
+        </select>
+        <button type="submit" class="btn btn-primary" style="margin-top:20px;">Continue</button>
+    </form>
+</div>
+<%- include('partials/footer') %>
