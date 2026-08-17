@@ -327,7 +327,11 @@ app.post('/admin/verifications/:id/approve', requireLogin, requireRole('admin'),
     res.redirect('/admin/verifications');
 });
 
-// ---------- One-time admin setup (remove this route after use) ----------
+// ---------- One-time admin setup (remove after use) ----------
+
+app.get('/debug-key', (req, res) => {
+    res.send('Server sees: [' + (process.env.ADMIN_SETUP_KEY || 'MISSING') + ']');
+});
 
 app.get('/setup-admin', (req, res) => {
     if (!process.env.ADMIN_SETUP_KEY || req.query.key !== process.env.ADMIN_SETUP_KEY) {
