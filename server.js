@@ -3,6 +3,8 @@ const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const db = require('./db/database');
 
 const app = express();
@@ -10,6 +12,28 @@ const PORT = process.env.PORT || 3000;
 const FREE_APPLICATION_LIMIT = 1;      // freelancer's first application is free
 const APPLICATION_FEE_MWK = 500;       // placeholder fee — adjust as decided
 const COMMISSION_RATE = 0.20;          // 20% platform commission
+
+// Safe one-time database migrations for onboarding fields
+const migrations = [
+    "ALTER TABLE freelancer_profiles ADD COLUMN cv_path TEXT",
+    "ALTER TABLE freelancer_profiles ADD COLUMN certificates_path TEXT",
+    "ALTER TABLE freelancer_profiles ADD COLUMN availability TEXT",
+    "ALTER TABLE freelancer_profiles ADD COLUMN onboarding_complete INTEGER DEFAULT 0"
+];
+migrations.forEach(sql => { try { db.exec(sql); } catch (e) { /* already exists */ } });
+
+// File upload setup
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => {
+        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, `${req.session.user.id}-${file.fieldname}-${unique}${path.extname(file.originalname)}`);
+    }
+});
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -45,6 +69,15 @@ function requireRole(role) {
     };
 }
 
+function requireOnboarding(req, res, next) {
+    if (!req.session.user || req.session.user.role !== 'freelancer') return next();
+    const profile = db.prepare('SELECT onboarding_complete FROM freelancer_profiles WHERE user_id = ?').get(req.session.user.id);
+    if (!profile || !profile.onboarding_complete) {
+        return res.redirect('/freelancer/onboarding/id');
+    }
+    next();
+}
+
 // ---------- Public pages ----------
 
 app.get('/', (req, res) => {
@@ -74,7 +107,7 @@ app.post('/signup', (req, res) => {
         }
 
         req.session.user = { id: info.lastInsertRowid, full_name, role };
-        res.redirect(role === 'freelancer' ? '/freelancer/profile/edit' : '/');
+        res.redirect(role === 'freelancer' ? '/freelancer/onboarding/id' : '/');
     } catch (err) {
         res.render('signup', { error: 'That email or phone is already registered.' });
     }
@@ -98,7 +131,7 @@ app.post('/logout', (req, res) => {
 
 // ---------- Jobs ----------
 
-app.get('/jobs', (req, res) => {
+app.get('/jobs', requireOnboarding, (req, res) => {
     const { category, city } = req.query;
     let query = `
         SELECT jobs.*, categories.name AS category_name
@@ -151,10 +184,15 @@ app.get('/jobs/:id', (req, res) => {
     res.render('job-detail', { job, applications });
 });
 
-// Freelancer applies to a job — enforces "first application free, then fee"
+// Freelancer applies to a job — enforces "first application free, then fee" and ID verification
 app.post('/jobs/:id/apply', requireLogin, requireRole('freelancer'), (req, res) => {
     const { proposal, proposed_price } = req.body;
     const freelancerId = req.session.user.id;
+
+    const applicant = db.prepare('SELECT is_verified FROM users WHERE id = ?').get(freelancerId);
+    if (!applicant.is_verified) {
+        return res.status(403).send('Your ID is still being reviewed. You can apply once verified.');
+    }
 
     const profile = db.prepare('SELECT * FROM freelancer_profiles WHERE user_id = ?').get(freelancerId);
     const isFree = profile.has_used_free_application < FREE_APPLICATION_LIMIT;
@@ -217,9 +255,79 @@ app.post('/freelancer/profile/edit', requireLogin, requireRole('freelancer'), (r
     res.redirect('/dashboard');
 });
 
+// ---------- Freelancer onboarding wizard ----------
+
+const ONBOARDING_STEPS = ['id', 'certificates', 'cv', 'portfolio', 'skills', 'availability', 'rate'];
+
+app.get('/freelancer/onboarding/:step', requireLogin, requireRole('freelancer'), (req, res) => {
+    const { step } = req.params;
+    if (!ONBOARDING_STEPS.includes(step)) return res.status(404).send('Not found.');
+    res.render(`onboarding-${step}`, { stepIndex: ONBOARDING_STEPS.indexOf(step), totalSteps: ONBOARDING_STEPS.length });
+});
+
+app.post('/freelancer/onboarding/id', requireLogin, requireRole('freelancer'), upload.single('id_document'), (req, res) => {
+    if (!req.file) return res.redirect('/freelancer/onboarding/id');
+    db.prepare('UPDATE users SET id_document_path = ? WHERE id = ?').run(`/uploads/${req.file.filename}`, req.session.user.id);
+    res.redirect('/freelancer/onboarding/certificates');
+});
+
+app.post('/freelancer/onboarding/certificates', requireLogin, requireRole('freelancer'), upload.single('certificates'), (req, res) => {
+    if (req.file) {
+        db.prepare('UPDATE freelancer_profiles SET certificates_path = ? WHERE user_id = ?').run(`/uploads/${req.file.filename}`, req.session.user.id);
+    }
+    res.redirect('/freelancer/onboarding/cv');
+});
+
+app.post('/freelancer/onboarding/cv', requireLogin, requireRole('freelancer'), upload.single('cv'), (req, res) => {
+    if (!req.file) return res.redirect('/freelancer/onboarding/cv');
+    db.prepare('UPDATE freelancer_profiles SET cv_path = ? WHERE user_id = ?').run(`/uploads/${req.file.filename}`, req.session.user.id);
+    res.redirect('/freelancer/onboarding/portfolio');
+});
+
+app.post('/freelancer/onboarding/portfolio', requireLogin, requireRole('freelancer'), upload.array('portfolio', 5), (req, res) => {
+    if (req.files && req.files.length) {
+        const paths = req.files.map(f => `/uploads/${f.filename}`).join(',');
+        db.prepare('UPDATE freelancer_profiles SET portfolio_images = ? WHERE user_id = ?').run(paths, req.session.user.id);
+    }
+    res.redirect('/freelancer/onboarding/skills');
+});
+
+app.post('/freelancer/onboarding/skills', requireLogin, requireRole('freelancer'), (req, res) => {
+    db.prepare('UPDATE freelancer_profiles SET skills = ? WHERE user_id = ?').run(req.body.skills, req.session.user.id);
+    res.redirect('/freelancer/onboarding/availability');
+});
+
+app.post('/freelancer/onboarding/availability', requireLogin, requireRole('freelancer'), (req, res) => {
+    db.prepare('UPDATE freelancer_profiles SET availability = ? WHERE user_id = ?').run(req.body.availability, req.session.user.id);
+    res.redirect('/freelancer/onboarding/rate');
+});
+
+app.post('/freelancer/onboarding/rate', requireLogin, requireRole('freelancer'), (req, res) => {
+    db.prepare('UPDATE freelancer_profiles SET hourly_rate = ?, onboarding_complete = 1 WHERE user_id = ?').run(req.body.hourly_rate, req.session.user.id);
+    res.redirect('/freelancer/onboarding/pending');
+});
+
+app.get('/freelancer/onboarding/pending', requireLogin, requireRole('freelancer'), (req, res) => res.render('onboarding-pending'));
+
+// ---------- Admin ----------
+
+app.get('/admin/verifications', requireLogin, requireRole('admin'), (req, res) => {
+    const pending = db.prepare(`
+        SELECT users.*, freelancer_profiles.onboarding_complete
+        FROM users JOIN freelancer_profiles ON freelancer_profiles.user_id = users.id
+        WHERE users.role = 'freelancer' AND users.is_verified = 0 AND freelancer_profiles.onboarding_complete = 1
+    `).all();
+    res.render('admin-verifications', { pending });
+});
+
+app.post('/admin/verifications/:id/approve', requireLogin, requireRole('admin'), (req, res) => {
+    db.prepare('UPDATE users SET is_verified = 1 WHERE id = ?').run(req.params.id);
+    res.redirect('/admin/verifications');
+});
+
 // ---------- Dashboard ----------
 
-app.get('/dashboard', requireLogin, (req, res) => {
+app.get('/dashboard', requireLogin, requireOnboarding, (req, res) => {
     const user = req.session.user;
     if (user.role === 'client') {
         const jobs = db.prepare('SELECT * FROM jobs WHERE client_id = ? ORDER BY created_at DESC').all(user.id);
