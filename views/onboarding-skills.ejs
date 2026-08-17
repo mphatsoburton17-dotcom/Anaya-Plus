@@ -1,0 +1,12 @@
+<% pageTitle = 'Your Skills' %>
+<%- include('partials/header') %>
+<%- include('partials/onboarding-progress') %>
+<div class="container">
+    <div class="section-title">What are your skills?</div>
+    <form action="/freelancer/onboarding/skills" method="POST">
+        <label>Skills (comma-separated)</label>
+        <input type="text" name="skills" placeholder="e.g. Graphic Design, Logo Design, Canva" required>
+        <button type="submit" class="btn btn-primary" style="margin-top:20px;">Continue</button>
+    </form>
+</div>
+<%- include('partials/footer') %>
