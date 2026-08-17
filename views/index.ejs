@@ -47,4 +47,9 @@
     <div class="section-title">Categories</div>
     <div style="display:flex; flex-wrap:wrap; gap:10px;">
         <% categories.forEach(cat => { %>
-            <a href="/jobs?category=<%= cat.id %>" style="background:var(--light-bg); padding:8px 14px; border-radius:20px; font-size:14px; color:var(--charcoal
+            <a href="/jobs?category=<%= cat.id %>" style="background:var(--light-bg); padding:8px 14px; border-radius:20px; font-size:14px; color:var(--charcoal);"><%= cat.name %></a>
+        <% }) %>
+    </div>
+</div>
+
+<%- include('partials/footer') %>
