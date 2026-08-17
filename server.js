@@ -327,6 +327,16 @@ app.post('/admin/verifications/:id/approve', requireLogin, requireRole('admin'),
     res.redirect('/admin/verifications');
 });
 
+// ---------- One-time admin setup (remove this route after use) ----------
+
+app.get('/setup-admin', (req, res) => {
+    if (!process.env.ADMIN_SETUP_KEY || req.query.key !== process.env.ADMIN_SETUP_KEY) {
+        return res.status(403).send('Forbidden.');
+    }
+    const info = db.prepare("UPDATE users SET role = 'admin' WHERE email = ?").run(req.query.email);
+    res.send(info.changes ? `${req.query.email} is now an admin.` : 'No user found with that email.');
+});
+
 // ---------- Dashboard ----------
 
 app.get('/dashboard', requireLogin, requireOnboarding, (req, res) => {
