@@ -60,3 +60,9 @@
     <% recentJobs.forEach(job => { %>
         <div class="card" style="border:1px solid #eee; border-radius:10px; padding:16px; margin-bottom:14px;">
             <h3 style="margin:0 0 4px;"><a href="/jobs/<%= job.id %>"><%= job.title %></a></h3>
+            <p style="color:var(--gray); font-size:14px; margin:0;"><%= job.category_name %> · MWK <%= job.budget_mwk.toLocaleString() %></p>
+        </div>
+    <% }) %>
+</div>
+
+<%- include('partials/footer') %>
