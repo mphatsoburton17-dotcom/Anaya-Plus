@@ -50,7 +50,12 @@ app.use(session({
 
 // Make current user + brand info available in every template
 app.use((req, res, next) => {
-    res.locals.currentUser = req.session.user || null;
+    let currentUser = req.session.user || null;
+    if (currentUser && currentUser.role === 'freelancer') {
+        const status = db.prepare('SELECT is_verified FROM users WHERE id = ?').get(currentUser.id);
+        currentUser = { ...currentUser, is_verified: status ? status.is_verified : 0 };
+    }
+    res.locals.currentUser = currentUser;
     res.locals.brand = { name: 'AnayaPlus', tagline: 'Local Services Marketplace' };
     next();
 });
@@ -261,6 +266,7 @@ const ONBOARDING_STEPS = ['id', 'certificates', 'cv', 'portfolio', 'skills', 'av
 
 app.get('/freelancer/onboarding/:step', requireLogin, requireRole('freelancer'), (req, res) => {
     const { step } = req.params;
+    if (step === 'pending') return res.render('onboarding-pending');
     if (!ONBOARDING_STEPS.includes(step)) return res.status(404).send('Not found.');
     res.render(`onboarding-${step}`, { stepIndex: ONBOARDING_STEPS.indexOf(step), totalSteps: ONBOARDING_STEPS.length });
 });
@@ -306,8 +312,6 @@ app.post('/freelancer/onboarding/rate', requireLogin, requireRole('freelancer'),
     db.prepare('UPDATE freelancer_profiles SET hourly_rate = ?, onboarding_complete = 1 WHERE user_id = ?').run(req.body.hourly_rate, req.session.user.id);
     res.redirect('/freelancer/onboarding/pending');
 });
-
-app.get('/freelancer/onboarding/pending', requireLogin, requireRole('freelancer'), (req, res) => res.render('onboarding-pending'));
 
 // ---------- Admin ----------
 
