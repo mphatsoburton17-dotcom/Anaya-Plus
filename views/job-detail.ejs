@@ -6,31 +6,43 @@
     <h1 style="margin:8px 0 4px;"><%= job.title %></h1>
     <p style="color:var(--gray);"><%= job.city %> · MWK <%= job.budget_mwk.toLocaleString() %> · Posted by <%= job.client_name %></p>
     <p><%= job.description %></p>
-    <p><strong>Status:</strong> <%= job.status %></p>
+    <p style="text-transform:capitalize;"><strong>Status:</strong> <%= job.status.replace('_', ' ') %></p>
 
     <% if (currentUser && currentUser.role === 'freelancer' && job.status === 'open') { %>
-        <div class="card">
+        <div style="border:1px solid #eee; border-radius:10px; padding:16px; margin-top:20px;">
             <div class="section-title" style="font-size:18px;">Apply to this job</div>
             <form action="/jobs/<%= job.id %>/apply" method="POST">
                 <label>Your Proposal</label>
                 <textarea name="proposal" rows="4" required></textarea>
                 <label>Your Price (MWK)</label>
                 <input type="number" name="proposed_price" min="0" required>
-                <button type="submit" class="btn btn-primary">Submit Application</button>
+                <button type="submit" class="btn btn-primary" style="margin-top:12px;">Submit Application</button>
             </form>
         </div>
     <% } %>
 
     <% if (currentUser && currentUser.role === 'client' && job.client_id === currentUser.id) { %>
-        <div class="section-title">Applications (<%= applications.length %>)</div>
+        <div class="section-title" style="margin-top:24px;">Applications (<%= applications.length %>)</div>
+
+        <% if (applications.length === 0) { %>
+            <p style="color:var(--gray);">No applications yet.</p>
+        <% } %>
+
         <% applications.forEach(app => { %>
-            <div class="card">
-                <strong><%= app.full_name %></strong>
-                <span class="badge"><%= app.status %></span>
-                <p><%= app.proposal %></p>
-                <p><strong>Proposed price:</strong> MWK <%= app.proposed_price.toLocaleString() %></p>
+            <div style="border:1px solid #eee; border-radius:10px; padding:16px; margin-bottom:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <strong><%= app.full_name %></strong>
+                    <span style="
+                        font-size:12px; font-weight:600; padding:3px 10px; border-radius:12px; text-transform:capitalize;
+                        background:<%= app.status === 'accepted' ? '#e8f8ee' : app.status === 'rejected' ? '#fdeaea' : '#fff4e5' %>;
+                        color:<%= app.status === 'accepted' ? '#1e8e4f' : app.status === 'rejected' ? '#c0392b' : 'var(--orange)' %>;
+                    "><%= app.status === 'rejected' ? 'Not selected' : app.status %></span>
+                </div>
+                <p style="margin:0 0 8px; color:var(--charcoal); font-size:14px;"><%= app.proposal %></p>
+                <p style="margin:0; font-size:14px;"><strong>Proposed price:</strong> MWK <%= app.proposed_price.toLocaleString() %></p>
+
                 <% if (app.status === 'pending' && job.status === 'open') { %>
-                    <form action="/applications/<%= app.id %>/accept" method="POST">
+                    <form action="/applications/<%= app.id %>/accept" method="POST" style="margin-top:12px;">
                         <button type="submit" class="btn btn-primary" style="width:auto;">Accept & Pay Into Escrow</button>
                     </form>
                 <% } %>
