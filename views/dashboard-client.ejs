@@ -1,20 +1,38 @@
-<% pageTitle = 'My Jobs' %>
+<% pageTitle = 'My Dashboard' %>
 <%- include('partials/header') %>
 
 <div class="container">
-    <div class="section-title">My Posted Jobs</div>
-    <a href="/jobs/new" class="btn btn-primary" style="width:auto; display:inline-block; margin-bottom:20px;">+ Post a New Job</a>
+    <div class="section-title">My Jobs</div>
+
+    <a href="/jobs/new" class="btn btn-primary" style="width:auto; padding:12px 24px; display:inline-block; margin-bottom:24px;">+ Post a New Job</a>
 
     <% if (jobs.length === 0) { %>
-        <p>You haven't posted any jobs yet.</p>
+        <div style="text-align:center; padding:40px 20px; color:var(--gray);">
+            <div style="font-size:40px; margin-bottom:12px;">📋</div>
+            <p style="margin:0 0 16px;">You haven't posted any jobs yet.</p>
+            <a href="/jobs/new" style="color:var(--orange); font-weight:600;">Post your first job →</a>
+        </div>
+    <% } else { %>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+            <% jobs.forEach(job => { %>
+                <a href="/jobs/<%= job.id %>" style="text-decoration:none; color:inherit;">
+                    <div style="border:1px solid #eee; border-radius:10px; padding:16px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                            <h3 style="margin:0; font-size:16px; color:var(--charcoal);"><%= job.title %></h3>
+                            <span style="
+                                font-size:12px; font-weight:600; padding:3px 10px; border-radius:12px; white-space:nowrap;
+                                background:<%= job.status === 'open' ? '#fff4e5' : job.status === 'in_progress' ? '#e5f0ff' : '#e8f8ee' %>;
+                                color:<%= job.status === 'open' ? 'var(--orange)' : job.status === 'in_progress' ? '#2b6cd4' : '#1e8e4f' %>;
+                            "><%= job.status.replace('_', ' ') %></span>
+                        </div>
+                        <p style="margin:8px 0 0; color:var(--gray); font-size:13px;">
+                            MWK <%= job.budget_mwk %> · <%= job.city %>
+                        </p>
+                    </div>
+                </a>
+            <% }) %>
+        </div>
     <% } %>
-    <% jobs.forEach(job => { %>
-        <a href="/jobs/<%= job.id %>" class="card" style="display:block;">
-            <h3 style="margin:0 0 4px;"><%= job.title %></h3>
-            <span class="badge"><%= job.status %></span>
-            <p style="color:var(--gray);">MWK <%= job.budget_mwk.toLocaleString() %> · <%= job.city %></p>
-        </a>
-    <% }) %>
 </div>
 
 <%- include('partials/footer') %>
