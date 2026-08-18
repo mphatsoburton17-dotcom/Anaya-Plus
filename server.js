@@ -90,6 +90,9 @@ function requireOnboarding(req, res, next) {
 // ---------- Public pages ----------
 
 app.get('/', (req, res) => {
+    if (req.session.user) {
+        return res.redirect('/dashboard');
+    }
     const categories = db.prepare('SELECT * FROM categories ORDER BY name').all();
     res.render('index', { categories });
 });
