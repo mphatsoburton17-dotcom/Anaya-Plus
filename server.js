@@ -221,7 +221,7 @@ app.post('/jobs/:id/apply', requireLogin, requireRole('freelancer'), (req, res) 
     }
 });
 
-// Client accepts an application -> creates a "held" escrow payment record
+// Client accepts an application -> creates a "held" escrow payment record, rejects the rest
 app.post('/applications/:id/accept', requireLogin, requireRole('client'), (req, res) => {
     const application = db.prepare('SELECT * FROM applications WHERE id = ?').get(req.params.id);
     const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(application.job_id);
@@ -231,6 +231,7 @@ app.post('/applications/:id/accept', requireLogin, requireRole('client'), (req, 
     const payout = amount - commission;
 
     db.prepare(`UPDATE applications SET status = 'accepted' WHERE id = ?`).run(application.id);
+    db.prepare(`UPDATE applications SET status = 'rejected' WHERE job_id = ? AND id != ?`).run(job.id, application.id);
     db.prepare(`UPDATE jobs SET status = 'in_progress' WHERE id = ?`).run(job.id);
     db.prepare(`
         INSERT INTO payments (job_id, client_id, freelancer_id, amount_mwk, commission_mwk, payout_mwk, status)
