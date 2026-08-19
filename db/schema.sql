@@ -1,4 +1,4 @@
-  -- AnayaPlus Database Schema
+-- AnayaPlus Database Schema
 -- SQLite (portable, easy to swap for PostgreSQL/MySQL later)
 
 PRAGMA foreign_keys = ON;
@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS freelancer_profiles (
 
 CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL
+    name TEXT UNIQUE NOT NULL,
+    is_remote INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS jobs (
@@ -124,12 +125,18 @@ CREATE TABLE IF NOT EXISTS disputes (
     FOREIGN KEY (raised_by) REFERENCES users(id)
 );
 
-INSERT OR IGNORE INTO categories (name) VALUES
-    ('Graphic Design'),
-    ('Web & Software Development'),
-    ('Social Media Management'),
-    ('Photography'),
-    ('Tutoring'),
-    ('Home Repair & Artisan Work'),
-    ('Writing & Translation'),
-    ('Event Planning');  
+INSERT OR IGNORE INTO categories (name, is_remote) VALUES
+    ('Graphic Design', 1),
+    ('Web & Software Development', 1),
+    ('Social Media Management', 1),
+    ('Photography', 0),
+    ('Tutoring', 1),
+    ('Home Repair & Artisan Work', 0),
+    ('Writing & Translation', 1),
+    ('Event Planning', 0),
+    ('Virtual Assistant', 1),
+    ('Content Writing & Copywriting', 1),
+    ('Data Entry', 1),
+    ('Transcription', 1),
+    ('Digital Marketing & SEO', 1),
+    ('Video Editing', 1);
