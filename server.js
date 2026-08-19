@@ -18,7 +18,11 @@ const migrations = [
     "ALTER TABLE freelancer_profiles ADD COLUMN cv_path TEXT",
     "ALTER TABLE freelancer_profiles ADD COLUMN certificates_path TEXT",
     "ALTER TABLE freelancer_profiles ADD COLUMN availability TEXT",
-    "ALTER TABLE freelancer_profiles ADD COLUMN onboarding_complete INTEGER DEFAULT 0"
+    "ALTER TABLE freelancer_profiles ADD COLUMN onboarding_complete INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN client_verified INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN client_verification_type TEXT",
+    "ALTER TABLE users ADD COLUMN client_business_cert_path TEXT",
+    "ALTER TABLE users ADD COLUMN client_verification_submitted INTEGER DEFAULT 0"
 ];
 migrations.forEach(sql => { try { db.exec(sql); } catch (e) { /* already exists */ } });
 
@@ -51,9 +55,14 @@ app.use(session({
 // Make current user + brand info available in every template
 app.use((req, res, next) => {
     let currentUser = req.session.user || null;
-    if (currentUser && currentUser.role === 'freelancer') {
-        const status = db.prepare('SELECT is_verified FROM users WHERE id = ?').get(currentUser.id);
-        currentUser = { ...currentUser, is_verified: status ? status.is_verified : 0 };
+    if (currentUser) {
+        const status = db.prepare('SELECT is_verified, client_verified, client_verification_submitted FROM users WHERE id = ?').get(currentUser.id);
+        currentUser = {
+            ...currentUser,
+            is_verified: status ? status.is_verified : 0,
+            client_verified: status ? status.client_verified : 0,
+            client_verification_submitted: status ? status.client_verification_submitted : 0
+        };
     }
     res.locals.currentUser = currentUser;
     res.locals.brand = { name: 'AnayaPlus', tagline: 'Local Services Marketplace' };
@@ -245,7 +254,13 @@ app.post('/jobs/:id/apply', requireLogin, requireRole('freelancer'), (req, res) 
 });
 
 // Client accepts an application -> creates a "held" escrow payment record, rejects the rest
+// Gated: client must be verified before hiring/paying
 app.post('/applications/:id/accept', requireLogin, requireRole('client'), (req, res) => {
+    const clientStatus = db.prepare('SELECT client_verified FROM users WHERE id = ?').get(req.session.user.id);
+    if (!clientStatus.client_verified) {
+        return res.redirect('/client/verify?reason=hire');
+    }
+
     const application = db.prepare('SELECT * FROM applications WHERE id = ?').get(req.params.id);
     const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(application.job_id);
 
@@ -265,6 +280,43 @@ app.post('/applications/:id/accept', requireLogin, requireRole('client'), (req, 
     // charge to the client before marking the payment as held.
 
     res.redirect(`/jobs/${job.id}`);
+});
+
+// ---------- Client verification ----------
+
+app.get('/client/verify', requireLogin, requireRole('client'), (req, res) => {
+    if (req.session.user.role !== 'client') return res.status(403).send('Not authorized.');
+    const user = db.prepare('SELECT client_verified, client_verification_submitted FROM users WHERE id = ?').get(req.session.user.id);
+    if (user.client_verified) return res.redirect('/dashboard');
+    if (user.client_verification_submitted) return res.redirect('/client/verify/pending');
+    res.render('client-verify', { reason: req.query.reason || null });
+});
+
+app.post('/client/verify', requireLogin, requireRole('client'), upload.fields([
+    { name: 'business_cert', maxCount: 1 },
+    { name: 'id_document', maxCount: 1 }
+]), (req, res) => {
+    const { verification_type } = req.body;
+
+    if (verification_type === 'business' && req.files.business_cert) {
+        db.prepare(`
+            UPDATE users SET client_verification_type = 'business',
+            client_business_cert_path = ?, client_verification_submitted = 1 WHERE id = ?
+        `).run(`/uploads/${req.files.business_cert[0].filename}`, req.session.user.id);
+    } else if (verification_type === 'individual' && req.files.id_document) {
+        db.prepare(`
+            UPDATE users SET client_verification_type = 'individual',
+            id_document_path = ?, client_verification_submitted = 1 WHERE id = ?
+        `).run(`/uploads/${req.files.id_document[0].filename}`, req.session.user.id);
+    } else {
+        return res.redirect('/client/verify');
+    }
+
+    res.redirect('/client/verify/pending');
+});
+
+app.get('/client/verify/pending', requireLogin, requireRole('client'), (req, res) => {
+    res.render('client-verify-pending');
 });
 
 // ---------- Freelancer profile ----------
@@ -343,11 +395,20 @@ app.get('/admin/verifications', requireLogin, requireRole('admin'), (req, res) =
         FROM users JOIN freelancer_profiles ON freelancer_profiles.user_id = users.id
         WHERE users.role = 'freelancer' AND users.is_verified = 0 AND freelancer_profiles.onboarding_complete = 1
     `).all();
-    res.render('admin-verifications', { pending });
+    const pendingClients = db.prepare(`
+        SELECT * FROM users
+        WHERE role = 'client' AND client_verified = 0 AND client_verification_submitted = 1
+    `).all();
+    res.render('admin-verifications', { pending, pendingClients });
 });
 
 app.post('/admin/verifications/:id/approve', requireLogin, requireRole('admin'), (req, res) => {
     db.prepare('UPDATE users SET is_verified = 1 WHERE id = ?').run(req.params.id);
+    res.redirect('/admin/verifications');
+});
+
+app.post('/admin/client-verifications/:id/approve', requireLogin, requireRole('admin'), (req, res) => {
+    db.prepare('UPDATE users SET client_verified = 1 WHERE id = ?').run(req.params.id);
     res.redirect('/admin/verifications');
 });
 
