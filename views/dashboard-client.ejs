@@ -4,7 +4,10 @@
 <div class="container">
     <div class="section-title">My Jobs</div>
 
-    <a href="/jobs/new" class="btn btn-primary" style="width:auto; padding:12px 24px; display:inline-block; margin-bottom:24px;">+ Post a New Job</a>
+    <div style="display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap;">
+        <a href="/jobs/new" class="btn btn-primary" style="width:auto; padding:12px 24px; display:inline-block;">+ Post a New Job</a>
+        <a href="/freelancers" style="width:auto; padding:12px 24px; display:inline-block; border:2px solid var(--orange); color:var(--orange); border-radius:8px; font-weight:600; text-decoration:none;">🔍 Find Freelancers</a>
+    </div>
 
     <% if (jobs.length === 0) { %>
         <div style="text-align:center; padding:40px 20px; color:var(--gray);">
