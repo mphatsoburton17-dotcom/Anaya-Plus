@@ -27,7 +27,8 @@ const migrations = [
     "ALTER TABLE users ADD COLUMN client_business_cert_path TEXT",
     "ALTER TABLE users ADD COLUMN client_verification_submitted INTEGER DEFAULT 0",
     "ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0",
-    "ALTER TABLE users ADD COLUMN email_confirm_token TEXT"
+    "ALTER TABLE users ADD COLUMN email_confirm_token TEXT",
+    "ALTER TABLE categories ADD COLUMN is_remote INTEGER DEFAULT 0"
 ];
 migrations.forEach(sql => { try { db.exec(sql); } catch (e) { /* already exists */ } });
 
@@ -451,6 +452,31 @@ app.post('/admin/client-verifications/:id/approve', requireLogin, requireRole('a
         );
     }
     res.redirect('/admin/verifications');
+});
+
+// ---------- Admin: manage categories ----------
+
+app.get('/admin/categories', requireLogin, requireRole('admin'), (req, res) => {
+    const categories = db.prepare('SELECT * FROM categories ORDER BY name').all();
+    res.render('admin-categories', { categories });
+});
+
+app.post('/admin/categories', requireLogin, requireRole('admin'), (req, res) => {
+    const { name, is_remote } = req.body;
+    if (name && name.trim()) {
+        try {
+            db.prepare('INSERT INTO categories (name, is_remote) VALUES (?, ?)')
+                .run(name.trim(), is_remote ? 1 : 0);
+        } catch (err) {
+            // category name already exists — ignore
+        }
+    }
+    res.redirect('/admin/categories');
+});
+
+app.post('/admin/categories/:id/delete', requireLogin, requireRole('admin'), (req, res) => {
+    db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
+    res.redirect('/admin/categories');
 });
 
 // ---------- One-time admin setup (remove after use) ----------
