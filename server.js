@@ -154,6 +154,26 @@ app.get('/jobs', requireOnboarding, (req, res) => {
     res.render('jobs-browse', { jobs, categories, filters: { category, city } });
 });
 
+// Client browses/searches verified freelancers
+app.get('/freelancers', requireLogin, requireRole('client'), (req, res) => {
+    const { skill, city } = req.query;
+    let query = `
+        SELECT users.id, users.full_name, users.city, freelancer_profiles.bio,
+               freelancer_profiles.skills, freelancer_profiles.hourly_rate,
+               freelancer_profiles.availability, freelancer_profiles.rating_avg
+        FROM users
+        JOIN freelancer_profiles ON freelancer_profiles.user_id = users.id
+        WHERE users.role = 'freelancer' AND users.is_verified = 1
+    `;
+    const params = [];
+    if (skill) { query += ' AND freelancer_profiles.skills LIKE ?'; params.push(`%${skill}%`); }
+    if (city) { query += ' AND users.city LIKE ?'; params.push(`%${city}%`); }
+    query += ' ORDER BY freelancer_profiles.rating_avg DESC';
+
+    const freelancers = db.prepare(query).all(...params);
+    res.render('freelancers-browse', { freelancers, filters: { skill, city } });
+});
+
 app.get('/jobs/new', requireLogin, requireRole('client'), (req, res) => {
     const categories = db.prepare('SELECT * FROM categories ORDER BY name').all();
     res.render('job-new', { categories });
