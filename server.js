@@ -2,16 +2,19 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const db = require('./db/database');
+const { sendMail } = require('./utils/mailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const FREE_APPLICATION_LIMIT = 1;      // freelancer's first application is free
 const APPLICATION_FEE_MWK = 500;       // placeholder fee — adjust as decided
 const COMMISSION_RATE = 0.20;          // 20% platform commission
+const BASE_URL = process.env.BASE_URL || 'https://anaya-plus.onrender.com';
 
 // Safe one-time database migrations for onboarding fields
 const migrations = [
@@ -22,7 +25,9 @@ const migrations = [
     "ALTER TABLE users ADD COLUMN client_verified INTEGER DEFAULT 0",
     "ALTER TABLE users ADD COLUMN client_verification_type TEXT",
     "ALTER TABLE users ADD COLUMN client_business_cert_path TEXT",
-    "ALTER TABLE users ADD COLUMN client_verification_submitted INTEGER DEFAULT 0"
+    "ALTER TABLE users ADD COLUMN client_verification_submitted INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN email_confirm_token TEXT"
 ];
 migrations.forEach(sql => { try { db.exec(sql); } catch (e) { /* already exists */ } });
 
@@ -56,12 +61,13 @@ app.use(session({
 app.use((req, res, next) => {
     let currentUser = req.session.user || null;
     if (currentUser) {
-        const status = db.prepare('SELECT is_verified, client_verified, client_verification_submitted FROM users WHERE id = ?').get(currentUser.id);
+        const status = db.prepare('SELECT is_verified, client_verified, client_verification_submitted, email_verified FROM users WHERE id = ?').get(currentUser.id);
         currentUser = {
             ...currentUser,
             is_verified: status ? status.is_verified : 0,
             client_verified: status ? status.client_verified : 0,
-            client_verification_submitted: status ? status.client_verification_submitted : 0
+            client_verification_submitted: status ? status.client_verification_submitted : 0,
+            email_verified: status ? status.email_verified : 0
         };
     }
     res.locals.currentUser = currentUser;
@@ -112,20 +118,38 @@ app.post('/signup', (req, res) => {
     const { full_name, email, phone, password, role, city } = req.body;
     try {
         const password_hash = bcrypt.hashSync(password, 10);
+        const confirmToken = crypto.randomBytes(24).toString('hex');
+
         const info = db.prepare(`
-            INSERT INTO users (full_name, email, phone, password_hash, role, city)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `).run(full_name, email, phone, password_hash, role, city);
+            INSERT INTO users (full_name, email, phone, password_hash, role, city, email_confirm_token)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).run(full_name, email, phone, password_hash, role, city, confirmToken);
 
         if (role === 'freelancer') {
             db.prepare('INSERT INTO freelancer_profiles (user_id) VALUES (?)').run(info.lastInsertRowid);
         }
+
+        sendMail(
+            email,
+            'Confirm your AnayaPlus account',
+            `<p>Hi ${full_name},</p>
+             <p>Thanks for signing up on AnayaPlus. Please confirm your email address by tapping the link below:</p>
+             <p><a href="${BASE_URL}/confirm-email/${confirmToken}">Confirm my email</a></p>
+             <p>If you didn't create this account, you can ignore this email.</p>`
+        );
 
         req.session.user = { id: info.lastInsertRowid, full_name, role };
         res.redirect(role === 'freelancer' ? '/freelancer/onboarding/id' : '/');
     } catch (err) {
         res.render('signup', { error: 'That email or phone is already registered.' });
     }
+});
+
+app.get('/confirm-email/:token', (req, res) => {
+    const user = db.prepare('SELECT * FROM users WHERE email_confirm_token = ?').get(req.params.token);
+    if (!user) return res.status(400).send('Invalid or already-used confirmation link.');
+    db.prepare('UPDATE users SET email_verified = 1, email_confirm_token = NULL WHERE id = ?').run(user.id);
+    res.send('Your email has been confirmed! You can close this page and return to AnayaPlus.');
 });
 
 app.get('/login', (req, res) => res.render('login', { error: null }));
@@ -285,7 +309,6 @@ app.post('/applications/:id/accept', requireLogin, requireRole('client'), (req, 
 // ---------- Client verification ----------
 
 app.get('/client/verify', requireLogin, requireRole('client'), (req, res) => {
-    if (req.session.user.role !== 'client') return res.status(403).send('Not authorized.');
     const user = db.prepare('SELECT client_verified, client_verification_submitted FROM users WHERE id = ?').get(req.session.user.id);
     if (user.client_verified) return res.redirect('/dashboard');
     if (user.client_verification_submitted) return res.redirect('/client/verify/pending');
@@ -404,11 +427,29 @@ app.get('/admin/verifications', requireLogin, requireRole('admin'), (req, res) =
 
 app.post('/admin/verifications/:id/approve', requireLogin, requireRole('admin'), (req, res) => {
     db.prepare('UPDATE users SET is_verified = 1 WHERE id = ?').run(req.params.id);
+    const user = db.prepare('SELECT full_name, email FROM users WHERE id = ?').get(req.params.id);
+    if (user) {
+        sendMail(
+            user.email,
+            'Your AnayaPlus account has been approved',
+            `<p>Hi ${user.full_name},</p>
+             <p>Good news — your freelancer account on AnayaPlus has been verified and approved. You can now browse and apply for jobs.</p>`
+        );
+    }
     res.redirect('/admin/verifications');
 });
 
 app.post('/admin/client-verifications/:id/approve', requireLogin, requireRole('admin'), (req, res) => {
     db.prepare('UPDATE users SET client_verified = 1 WHERE id = ?').run(req.params.id);
+    const user = db.prepare('SELECT full_name, email FROM users WHERE id = ?').get(req.params.id);
+    if (user) {
+        sendMail(
+            user.email,
+            'Your AnayaPlus account has been approved',
+            `<p>Hi ${user.full_name},</p>
+             <p>Good news — your client account on AnayaPlus has been verified. You can now hire freelancers and move payments into escrow.</p>`
+        );
+    }
     res.redirect('/admin/verifications');
 });
 
