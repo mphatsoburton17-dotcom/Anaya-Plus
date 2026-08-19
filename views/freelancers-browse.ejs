@@ -1,0 +1,46 @@
+<% pageTitle = 'Find Freelancers' %>
+<%- include('partials/header') %>
+
+<div class="container">
+    <div class="section-title">Find Freelancers</div>
+
+    <form method="GET" action="/freelancers" style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+        <input type="text" name="skill" placeholder="Skill, e.g. Graphic Design" value="<%= filters.skill || '' %>" style="flex:1; min-width:140px;">
+        <input type="text" name="city" placeholder="City, e.g. Lilongwe" value="<%= filters.city || '' %>" style="flex:1; min-width:140px;">
+        <button type="submit" class="btn btn-primary" style="width:auto; padding:12px 20px;">Search</button>
+    </form>
+
+    <% if (freelancers.length === 0) { %>
+        <div style="text-align:center; padding:40px 20px; color:var(--gray);">
+            <div style="font-size:40px; margin-bottom:12px;">🔍</div>
+            <p style="margin:0;">No freelancers match your search yet.</p>
+        </div>
+    <% } else { %>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+            <% freelancers.forEach(f => { %>
+                <div style="border:1px solid #eee; border-radius:10px; padding:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                        <div>
+                            <h3 style="margin:0 0 4px; font-size:16px;"><%= f.full_name %></h3>
+                            <p style="margin:0; color:var(--gray); font-size:13px;"><%= f.city %></p>
+                        </div>
+                        <% if (f.hourly_rate) { %>
+                            <span style="font-weight:700; color:var(--orange); font-size:14px; white-space:nowrap;">MWK <%= f.hourly_rate.toLocaleString() %>/hr</span>
+                        <% } %>
+                    </div>
+                    <% if (f.skills) { %>
+                        <p style="margin:10px 0 0; font-size:13px; color:var(--charcoal);"><strong>Skills:</strong> <%= f.skills %></p>
+                    <% } %>
+                    <% if (f.bio) { %>
+                        <p style="margin:8px 0 0; font-size:13px; color:var(--gray);"><%= f.bio %></p>
+                    <% } %>
+                    <% if (f.availability) { %>
+                        <p style="margin:8px 0 0; font-size:12px; color:var(--gray); text-transform:capitalize;"><%= f.availability.replace('_', '-') %></p>
+                    <% } %>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
+</div>
+
+<%- include('partials/footer') %>
