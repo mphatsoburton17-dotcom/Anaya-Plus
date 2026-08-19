@@ -1,0 +1,49 @@
+<% pageTitle = 'Get Verified' %>
+<%- include('partials/header') %>
+
+<div class="container">
+    <div class="section-title">Get Verified</div>
+
+    <% if (reason === 'hire') { %>
+        <div style="background:#fff4e5; color:var(--orange); padding:12px 16px; border-radius:8px; margin-bottom:20px; font-size:14px;">
+            Verification is required before you can hire a freelancer or move payment into escrow.
+        </div>
+    <% } %>
+
+    <p style="color:var(--gray); font-size:14px; margin-bottom:20px;">
+        Choose the option that fits you. This helps freelancers trust that jobs and payments on AnayaPlus are legitimate.
+    </p>
+
+    <form action="/client/verify" method="POST" enctype="multipart/form-data" id="verifyForm">
+        <div style="border:1px solid #eee; border-radius:10px; padding:16px; margin-bottom:14px;">
+            <label style="display:flex; align-items:center; gap:8px; font-weight:600;">
+                <input type="radio" name="verification_type" value="business" onclick="showField('business')"> I have a business certificate
+            </label>
+            <div id="businessField" style="display:none; margin-top:12px;">
+                <label>Upload Business Certificate</label>
+                <input type="file" name="business_cert" accept="image/*,.pdf">
+            </div>
+        </div>
+
+        <div style="border:1px solid #eee; border-radius:10px; padding:16px; margin-bottom:20px;">
+            <label style="display:flex; align-items:center; gap:8px; font-weight:600;">
+                <input type="radio" name="verification_type" value="individual" onclick="showField('individual')"> I'm an individual (no business certificate)
+            </label>
+            <div id="individualField" style="display:none; margin-top:12px;">
+                <label>Upload National ID</label>
+                <input type="file" name="id_document" accept="image/*,.pdf">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit for Verification</button>
+    </form>
+</div>
+
+<script>
+function showField(type) {
+    document.getElementById('businessField').style.display = type === 'business' ? 'block' : 'none';
+    document.getElementById('individualField').style.display = type === 'individual' ? 'block' : 'none';
+}
+</script>
+
+<%- include('partials/footer') %>
