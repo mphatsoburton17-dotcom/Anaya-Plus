@@ -1,0 +1,59 @@
+<%- include('partials/header') %>
+
+<style>
+  .admin-wrap { max-width: 720px; margin: 30px auto; padding: 0 16px; }
+  .admin-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;
+  }
+  .admin-card {
+    display: block; text-decoration: none; color: inherit;
+    border: 1px solid #eee; border-radius: 12px; padding: 18px;
+    background: #fff;
+  }
+  .admin-card h3 { margin: 0 0 6px; font-size: 16px; }
+  .admin-card .count {
+    font-size: 28px; font-weight: bold; color: #ff8c00;
+  }
+  .admin-card .label { font-size: 13px; color: #777; }
+  .badge-alert {
+    display: inline-block; background: #ffe0e0; color: #c0392b;
+    font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 6px;
+  }
+</style>
+
+<div class="admin-wrap">
+  <h1>Admin Dashboard</h1>
+  <p style="color:#777;">Welcome, <%= currentUser.full_name %></p>
+
+  <div class="admin-grid">
+    <a class="admin-card" href="/admin/verifications">
+      <div class="count"><%= pendingFreelancers %></div>
+      <h3>Freelancer Approvals
+        <% if (pendingFreelancers > 0) { %><span class="badge-alert">Action needed</span><% } %>
+      </h3>
+      <div class="label">Pending onboarding review</div>
+    </a>
+
+    <a class="admin-card" href="/admin/verifications">
+      <div class="count"><%= pendingClients %></div>
+      <h3>Client Approvals
+        <% if (pendingClients > 0) { %><span class="badge-alert">Action needed</span><% } %>
+      </h3>
+      <div class="label">Pending business verification</div>
+    </a>
+
+    <a class="admin-card" href="/admin/categories">
+      <div class="count"><%= totalCategories %></div>
+      <h3>Job Categories</h3>
+      <div class="label">Manage & add categories</div>
+    </a>
+
+    <a class="admin-card" href="/jobs">
+      <div class="count"><%= totalJobs %></div>
+      <h3>Total Jobs Posted</h3>
+      <div class="label">View all listings</div>
+    </a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
