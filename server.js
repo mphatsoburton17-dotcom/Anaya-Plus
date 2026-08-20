@@ -413,6 +413,21 @@ app.post('/freelancer/onboarding/rate', requireLogin, requireRole('freelancer'),
 
 // ---------- Admin ----------
 
+app.get('/admin/dashboard', requireLogin, requireRole('admin'), (req, res) => {
+    const pendingFreelancers = db.prepare(`
+        SELECT COUNT(*) AS count FROM users
+        JOIN freelancer_profiles ON freelancer_profiles.user_id = users.id
+        WHERE users.role = 'freelancer' AND users.is_verified = 0 AND freelancer_profiles.onboarding_complete = 1
+    `).get().count;
+    const pendingClients = db.prepare(`
+        SELECT COUNT(*) AS count FROM users
+        WHERE role = 'client' AND client_verified = 0 AND client_verification_submitted = 1
+    `).get().count;
+    const totalCategories = db.prepare('SELECT COUNT(*) AS count FROM categories').get().count;
+    const totalJobs = db.prepare('SELECT COUNT(*) AS count FROM jobs').get().count;
+    res.render('admin-dashboard', { pendingFreelancers, pendingClients, totalCategories, totalJobs });
+});
+
 app.get('/admin/verifications', requireLogin, requireRole('admin'), (req, res) => {
     const pending = db.prepare(`
         SELECT users.*, freelancer_profiles.onboarding_complete
@@ -497,6 +512,9 @@ app.get('/setup-admin', (req, res) => {
 
 app.get('/dashboard', requireLogin, requireOnboarding, (req, res) => {
     const user = req.session.user;
+    if (user.role === 'admin') {
+        return res.redirect('/admin/dashboard');
+    }
     if (user.role === 'client') {
         const jobs = db.prepare('SELECT * FROM jobs WHERE client_id = ? ORDER BY created_at DESC').all(user.id);
         return res.render('dashboard-client', { jobs });
